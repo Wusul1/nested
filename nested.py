@@ -1,180 +1,140 @@
-from tkinter import *
-import random
-import os
-#implement LLM-ENGINE (first for thoughts etc, then for the whole game)
-use_ai_engine=False
-prompt='User: What is contained in "Earth"? AI: Earth->Continents*7,Sea*5. User: What is contained in "Small Magdellanic Cloud" AI: Small Magdellanic Cloud-> Central Black Hole, Star Region*40, Nebula*4 User: What is contained in Firefighter Ai: '
-#implement merging thingfiles
-#implement merge confilcts
-#implement error message when no thing files have been found
-def load(things_file):
-    inthings = [[], []]
-
-    # Datei öffnen und Zeilen einlesen
-    with open(things_file, "r") as file:
-        lines = file.readlines()
-
-    # Zeilenumbrüche entfernen
-    lines = [line.strip() for line in lines]
-
-    # Durch jede Zeile gehen
-    for line in lines:
-        sections_1 = line.split("!")
-        inthings[0].append(sections_1[0])
-        inthings[1].append([])
-
-        for sections_2 in sections_1[1].split(","):
-            section_2_list = sections_2.split(".")
-            inthings[1][-1].append(section_2_list)
-
-    return inthings
-
-def searchdirs(dirs):
-    thingfiles=[]
-    for dir in dirs:
-        try:
-            files = os.listdir(dir)
-        except:
-            continue
-        #search for valid thingfiles by trying to load them, add them to valid_files if succesfull
-        valid_files=[]
-        for file in files:
-            try:
-                load(dir+"/"+file)
-                valid_files.append(file)
-            except:
-                pass
-        thingfiles.extend(valid_files)
-    return thingfiles
-
-thing_file_dirs=["thingfiles"]#directories that are searched for thingfiles
-things_files_list = searchdirs(thing_file_dirs)#If there is more than one thingfile in here, the user should be able to select which one to use, unimplemented
-print(things_files_list)
-if len(things_files_list)==1: things_file=things_files_list[0]
-#dinge aus der oben angegebenen datei laden
-
-
-# Funktion zum Öffnen eines Elements
-def openThing(thing, inthings):
-    global things
-    global historie
-
-    # Historie aktualisieren
-    historie.append(things)
-
-    # Index des ausgewählten Elements finden
-    num = inthings[0].index(thing)
-    elements = []
-
-    # Durch die Unterabschnitte des Elements gehen
-    for inthing_2 in inthings[1][num]:
-        ranNum = random.randint(1, 100)
-
-        if ranNum > 100 - int(inthing_2[1]):
-            if inthing_2[2] == inthing_2[3]:
-                anzahl = int(inthing_2[2])
+import tkinter as tk
+import copy
+from random import randint
+#todo: remove fix in ThingContent
+#add dependencies/noncooexistence with other elements
+#add thingfile selector
+#add merging thingfiles
+#add thingfiles specifing root, let the use select which thingfiles root to use
+#add pagination for many things
+#make the whole thing procedural instead of random
+#make option to use LLM to generate contents
+class ThingContent():
+    def __init__(self, name, percentage, min, max, needs_to_exist, cant_exist):
+        self.name = name
+        self.percentage = int(percentage)
+        self.min = int(min)
+        if max=="n": #fix
+            max=1
+        self.max = int(max)
+        self.needs_to_exist = needs_to_exist
+        self.cant_exist = cant_exist
+class Thing():
+    def __init__(self, name, contents):
+        self.name = name
+        self.contents = contents
+class ThingFile():
+    def __init__(self, filename):
+        self.filename = filename
+        self.things_in_file = self.load()
+    def return_thing_by_name(self,thingname):
+        for thing in self.things_in_file:
+            if thing.name == thingname:
+                return thing
+    def exists_in_thingfile(self,thingname):
+        for thing in self.things_in_file:
+            if thing.name == thingname:
+                return True
+        return False
+    def load(self):
+        things_in_file = []#list an dingen, die es gibt, wird aus textdatei geladen
+        lines = open(self.filename, "r", encoding="utf-8").readlines()
+        lines = [line.strip() for line in lines] #leerzeichen vor und nach zeilen von thingsdatei entfernen
+        for line in lines:
+            sections=line.split("!")#splitted zeile in ihre zwei sektionen (ding:inhalt)
+            thing=Thing(sections[0], self.content_string_to_content_list(sections[1]))#create new thing object
+            things_in_file.append(thing)
+        return things_in_file
+    #converts the content string (the things after the ! in each line of the thingfile) into a list of ThingContent
+    def content_string_to_content_list(self, content_string):
+        thing_contents=[]
+        content_string_parts = content_string.split(",")#, sperates the different content things of a thing in the thingsfile
+        for content_string_part in content_string_parts:
+            content_string_part_attributes=content_string_part.split(".")#liste der attribute eines thing_contents
+            for i in range(4,6):
+                try:
+                    if content_string_part_attributes[i]=="n":
+                        content_string_part_attributes[i]=[]
+                    else:
+                        content_string_part_attributes[i]=content_string_part_attributes[i].split("/")
+                except:
+                    content_string_part_attributes.append([])
+            if len(content_string_part_attributes)<6:
+                continue
             else:
-                anzahl = random.randint(int(inthing_2[2]), int(inthing_2[3]))
-
-            while anzahl > 0:
-                if inthing_2[4] == "n":
-                    if check_a(elements, inthing_2[5]):
-                        elements.append(inthing_2[0])
-                        anzahl -= 1
-                    else:
-                        break
-                else:
-                    exists_2 = all(element in elements for element in inthing_2[4].split("/"))
-                    if exists_2:
-                        if check_a(elements, inthing_2[5]):
-                            elements.append(inthing_2[0])
-                            anzahl -= 1
-                        else:
-                            break
-                    else:
-                        break
-
-    things = elements
-    showRootWindow()
-
-# Funktion zum Überprüfen, ob Elemente in der Liste vorhanden sind
-def check_a(elements_, toCheck):
-    if toCheck == "n":
-        return True
-    else:
-        for thing___ in toCheck.split("/"):
-            if thing___ not in elements_:
-                return False
-        return True
-
-# Funktion zum Zurückkehren zur vorherigen Ansicht
-def back():
-    global things
-    global historie
-    things = historie.pop()
-    showRootWindow()
-
-# Funktion zum Überprüfen, ob ein Element existiert
-def check(thing):
-    global inthings
-    return thing in inthings[0]
-
-# Funktion zum Anzeigen des Hauptfensters
-def showRootWindow():
-    global root
-    global things
-    global elements_tk
-    global inthings
-    global historie
-
-    clearElements()
-    buttons = []
-
-    for thing in things:
-        if check(thing):
-            buttons.append(Button(root, text=thing, command=lambda t=thing: openThing(t, inthings)))
+                thing_content = ThingContent(*content_string_part_attributes)
+                thing_contents.append(thing_content)
+        return thing_contents
+            
+class HistoryManager():
+    def __init__(self):
+        self.history_holder=[]
+    def get_history_count(self):
+        return len(self.history_holder)
+    def return_and_delete_latest(self):
+        latest = self.history_holder[-1]
+        del self.history_holder[-1]
+        return latest
+    def add_to_historie(self, state):
+        self.history_holder.append(copy.deepcopy(state))#make sure changing state will never change it's value in history_holder
+class NestedApp:
+    def __init__(self, root, startthings, thingfilename):
+        self.root = root
+        self.things = startthings #die dinge die gerade angezeigt werden
+        self.historiemanager = HistoryManager()
+        self.thingfile = ThingFile(thingfilename)
+        self.show_window()
+    def clear_window(self):
+        for widget in self.root.winfo_children():
+            widget.destroy()
+    def back(self):
+        self.things = self.historiemanager.return_and_delete_latest()
+        self.show_window()
+    def show_window(self):
+        self.clear_window()
+        buttons_to_place=[]
+        for thing in self.things:
+            if self.thingfile.exists_in_thingfile(thing):
+                buttons_to_place.append(tk.Button(self.root, text=thing, command=lambda: self.open_thing(thing)))
+            else:
+                buttons_to_place.append(tk.Button(self.root, text=thing, state="disabled"))
+        grid_position_row = -1
+        grid_position_column = 0
+        back_button_row = 0
+        update_back_button_position = True
+        for button in buttons_to_place:
+            if update_back_button_position:
+                back_button_row+=1
+            grid_position_row+=1
+            button.grid(row=grid_position_row, column=grid_position_column)
+            
+            if grid_position_row==20:
+                grid_position_column+=1
+                grid_position_row=-1
+                update_back_button_position = False
+        if self.historiemanager.get_history_count() < 1:
+            back_button = tk.Button(self.root, text="Zurück", state="disabled")
         else:
-            buttons.append(Button(root, text=thing, state=DISABLED))
-
-    gridPosR = -1
-    gridPosC = 0
-    backButtonPos = 0
-    updateBackButtonPos = True
-
-    for button in buttons:
-        if updateBackButtonPos:
-            backButtonPos += 1
-
-        elements_tk.append(button)
-        gridPosR += 1
-        button.grid(row=gridPosR, column=gridPosC)
-
-        if gridPosR == 20:
-            updateBackButtonPos = False
-            gridPosC += 1
-            gridPosR = -1
-
-    if len(historie) > 0:
-        backButton = Button(root, text="Zurück", command=back, bg="#f55f5f")
-    else:
-        backButton = Button(root, text="Zurück", state=DISABLED)
-
-    backButton.grid(row=backButtonPos, column=0)
-    elements_tk.append(backButton)
-
-# Funktion zum Entfernen aller GUI-Elemente
-def clearElements():
-    global elements_tk
-    for element in elements_tk:
-        element.destroy()
-
-elements_tk = []
-historie = []
-inthings = load(thingsfile)
-things = ["SMC"]
-historie = []
-
-root = Tk()
-showRootWindow()
-root.mainloop()
-
+            back_button = tk.Button(self.root, text="Zurück", command=self.back, bg="#f55f5f")
+        back_button.grid(row=back_button_row, column=0)
+    def open_thing(self,thingname):
+        self.historiemanager.add_to_historie(self.things)
+        self.things=[]
+        thing_to_open = self.thingfile.return_thing_by_name(thingname)
+        for content in thing_to_open.contents:
+            random_number=randint(1,100)
+            if random_number>100-content.percentage:
+                if content.min == content.max:
+                    count_of_thing = content.min
+                else:
+                    count_of_thing = randint(content.min,content.max)
+                for i in range(1,count_of_thing+1):
+                    self.things.append(content.name)
+        self.show_window()
+def main():
+    root = tk.Tk()
+    app = NestedApp(root,["Raumschiff"],"things_raumschiff.txt")
+    root.mainloop()
+    
+if __name__ == "__main__":
+    main()
