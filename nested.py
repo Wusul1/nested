@@ -2,6 +2,7 @@ import tkinter as tk
 import copy
 from random import randint
 #todo: remove fix in ThingContent
+#move stuff to ThingFileEngine (like LLM ENGInE)
 #add dependencies/noncooexistence with other elements
 #add thingfile selector
 #add merging thingfiles
