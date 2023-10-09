@@ -119,9 +119,15 @@ class NestedApp:
         back_button.grid(row=back_button_row, column=0)
     def check_requirements(needs_to_exist,cant_exist):
         needs_to_exit_met=True
+        cant_exist_met=True
         for requirement in needs_to_exist:
             if requirement not in self.things:
                 needs_to_exist_met=False
+                break
+        for requirement in cant_exist:
+            if requirement in self.things:
+                cant_exist_met=False
+                break
     def open_thing(self,thingname):
         self.historiemanager.add_to_historie(self.things)
         self.things=[]
