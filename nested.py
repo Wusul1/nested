@@ -117,6 +117,11 @@ class NestedApp:
         else:
             back_button = tk.Button(self.root, text="Zurück", command=self.back, bg="#f55f5f")
         back_button.grid(row=back_button_row, column=0)
+    def check_requirements(needs_to_exist,cant_exist):
+        needs_to_exit_met=True
+        for requirement in needs_to_exist:
+            if requirement not in self.things:
+                needs_to_exist_met=False
     def open_thing(self,thingname):
         self.historiemanager.add_to_historie(self.things)
         self.things=[]
