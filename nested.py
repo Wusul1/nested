@@ -15,8 +15,6 @@ class ThingContent():
         self.name = name
         self.percentage = int(percentage)
         self.min = int(min)
-        if max=="n": #fix
-            max=1
         self.max = int(max)
         self.needs_to_exist = needs_to_exist
         self.cant_exist = cant_exist
