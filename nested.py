@@ -128,8 +128,9 @@ class NestedApp:
                     count_of_thing = content.min
                 else:
                     count_of_thing = randint(content.min,content.max)
-                for i in range(1,count_of_thing+1):
-                    self.things.append(content.name)
+                if check_requirements(content.needs_to_exist, content.cant_exist):
+                    for i in range(1,count_of_thing+1):
+                        self.things.append(content.name)
         self.show_window()
 def main():
     root = tk.Tk()
