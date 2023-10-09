@@ -96,7 +96,7 @@ class NestedApp:
         buttons_to_place=[]
         for thing in self.things:
             if self.thingfile.exists_in_thingfile(thing):
-                buttons_to_place.append(tk.Button(self.root, text=thing, command=lambda: self.open_thing(thing)))
+                buttons_to_place.append(tk.Button(self.root, text=thing, command=lambda thing=thing: self.open_thing(thing)))
             else:
                 buttons_to_place.append(tk.Button(self.root, text=thing, state="disabled"))
         grid_position_row = -1
@@ -118,7 +118,7 @@ class NestedApp:
         else:
             back_button = tk.Button(self.root, text="Zurück", command=self.back, bg="#f55f5f")
         back_button.grid(row=back_button_row, column=0)
-    def check_requirements(needs_to_exist,cant_exist):
+    def check_requirements(self,needs_to_exist,cant_exist):
         needs_to_exist_met=True
         cant_exist_met=True
         for requirement in needs_to_exist:
@@ -144,7 +144,7 @@ class NestedApp:
                     count_of_thing = content.min
                 else:
                     count_of_thing = randint(content.min,content.max)
-                if check_requirements(content.needs_to_exist, content.cant_exist):
+                if self.check_requirements(content.needs_to_exist, content.cant_exist):
                     for i in range(1,count_of_thing+1):
                         self.things.append(content.name)
         self.show_window()
@@ -155,3 +155,4 @@ def main():
     
 if __name__ == "__main__":
     main()
+Hyper
